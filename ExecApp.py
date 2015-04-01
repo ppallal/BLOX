@@ -106,7 +106,7 @@ class ExecApp():
 
 		if(node.type == "span"):
 			# font = ImageFont.truetype("TNR.ttf", node['size'])
-			font = ImageFont.truetype("TNR.ttf", 16)
+			font = ImageFont.truetype("TNR.ttf", 70)
 			self.drawC.text((placex,placey),node.text,font=font)
 		elif(node.type == "img"):
 			img2 = Image.open(node.src)
