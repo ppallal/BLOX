@@ -11,13 +11,14 @@ class NewsFeed(BLOX):
 		# Register all the shit like the layouts and the callbacks
 		self.newLayout("Welcome","welcome.xml")
 		feed = feedparser.parse('http://www.news.yahoo.com/rss')
-		titles = map(lambda x:x.title,feed.entries)
+		self.titles = map(lambda x:x.title,feed.entries)
 		# Call layouts 
 		self.renderLayout("Welcome") 
+		self.postNewsFeed()
 
 		# Register intervals
-	def postNewsFeed():
-		for i in feed:
+	def postNewsFeed(self):
+		for i in self.titles:
 			self.changeVariable("displayMesssage",i,"span","Welcome")
 			self.refreshScreen()
 			time.sleep(1)
