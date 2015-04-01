@@ -114,7 +114,7 @@ class ExecApp():
 			self.drawC.paste(img,(placex,placey))
 		elif(node.type == "div"):
 			for i in node.children:
-				self.img.show()
+				#self.img.show()
 				self.drawme(i,(node.width,self.lineheight))
 			self.lineheight+= node.height
 

@@ -10,10 +10,10 @@ class Element:
 		# if(self.type in ['div','span']):
 		self.children = []
 
-		self.width = node.get("width",default = False)
-		if(not self.width): self.width = '100'
-		self.height = node.get("height",default = False)
-		if(not self.height): self.height = '100'
+		self.width = int(node.get("width",default = False))
+		if(not self.width): self.width = 100
+		self.height = int(node.get("height",default = False))
+		if(not self.height): self.height = 100
 		self.alignment = node.get("align",default = False) 
 		variables = node.get("var",default = False)
 		if(variables <> False):
