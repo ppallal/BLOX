@@ -2,30 +2,38 @@ import xml.etree.ElementTree as ET
 
 class Element:
 	def __init__(self,node,layout):
-		self.text = node.text.strip()
 		self.type = node.tag
+		if(self.type == 'span'):
+			self.text = node.text.strip()
+		elif(self.type == 'img'):
+			self.src = node.get('src')
+		# if(self.type in ['div','span']):
 		self.children = []
-		self.height = node.get("height",default = False)
+
 		self.width = node.get("width",default = False)
+		if(not self.width): self.width = '100'
+		self.height = node.get("height",default = False)
+		if(not self.height): self.height = '100'
 		self.alignment = node.get("align",default = False) 
 		variables = node.get("var",default = False)
 		if(variables <> False):
-			variables = variables.split(" ")
+			variables = variables.split()
 			if(type(variables) == type("")):
 				variables = [variables]
 			variables = filter(lambda x:x,map(lambda x:x.strip(),variables))
 			for i in variables:
-				if(not layout.scope.get(i,default=False)):
+				if(not layout.scope.get(i,False)):
 					layout.scope[i]=[self]
 				else: 
 					layout.scope[i].append(self)
+			
 
 	def addClild(self,child):
 		self.children.append(child)
 
-
-
-
+	def setValue(self,value):	
+		if(self.type == 'img'): self.src = value
+		elif(self.type == 'span'): self.text = value
 
 
 class Layout:
@@ -49,32 +57,40 @@ class Layout:
 			Node.addClild(childNode)
 			self.parseNode(i,childNode)
 
-	def draw(self,height,width):
-		# Chukka's Logic 
-		pass
-
-
-
+	def changeVariable(self,varName,value,varType):
+		nodes = self.scope.get(varName,[])
+		for i in nodes:
+			if(i.type == varType):
+				i.setValue(value)
 
 	
 
 
 
+
+	
+# Same app running as different screen
+
+
 class BLOX:
-	def __init__(self):
+	def __init__(self,renderImage):
 		self.commands = {}
 		self.layouts = {}
 		self.activeLayoutID = ""
 		self.scopes = {}
+		self.renderImage = renderImage
+		# Create json of all commands
+
 
  
-	def registerCommand(self,command,callback):
+	def registerCommand(self,command,callback,parellel=False):
 		if(not type(command) == type("")):
 			print "command not registered"
 			return False
 
-		self.commands[command] = callback
+		self.commands[command] = (parellel,callback)
 		return True
+
 
 	def newLayout(self,layoutId,layoutFileName):
 		if(not type(layoutId) == type("")):
@@ -87,6 +103,14 @@ class BLOX:
 	 	self.layouts[layoutId] = newLayout 	
 		return True
 
+	def changeVariable(self,varName,value,varType,layoutId = False):
+		if(not layoutId):
+			for i in self.layouts:
+				self.layouts[i].changeVariable(varName,value,varType)
+		else:
+			self.layouts[layoutId].changeVariable(varName,value,varType)
+
+
 	def renderLayout(self,layoutId = False):
 		if(not layoutId):
 			layoutId = self.activeLayoutID
@@ -97,8 +121,9 @@ class BLOX:
 
 	def refreshScreen(self):
 		# Change Variable values and render screen , No tree building
-		self.layouts[self.activeLayoutID].draw()
-		self.sendImage()
+		self.renderImage(self.layouts[self.activeLayoutID])
+		
+		# self.sendImage()
 		print  '-'*70
 		print "\t\tThe screen is now being displayed"
 		print "\t\t\t\t",self.activeLayoutID 		
@@ -117,7 +142,7 @@ class BLOX:
 		pass
 
 	def start(self):
-		print "I started"
+		print self.__class__,"Starting ..."
 
 	def pause(self):
 		# take care of max size of program and shit

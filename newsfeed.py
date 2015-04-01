@@ -1,8 +1,8 @@
 from blox import BLOX
 
 class NewsFeed(BLOX):
-	def __init__(self):
-		BLOX.__init__(self)
+	def __init__(self,renderImage):
+		BLOX.__init__(self,renderImage)
 
 	def start(self):
 		BLOX.start(self)
