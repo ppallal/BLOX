@@ -1,5 +1,5 @@
-<Layout>
+<div>
 	<span var="displayMesssage fullShit">
 		Welcome Layout
 	</span>
-</Layout>
+</div>

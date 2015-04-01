@@ -1,6 +1,8 @@
 from threading import *
 import importlib
 import sys
+import Image, ImageFont, ImageDraw
+
 
 class workerPool():
 	"""docstring for workerPool"""
@@ -83,9 +85,50 @@ class ExecApp():
 		self.sendImage(image)
 		pass
 
+	def drawme(self,node,(parentwidth,parentheight)):
+	
+		#place point
+		placex,placey = 0,0
+		if(node.alignment == "left"):
+			if(hasattr(node,'x')):
+				placex = node.x+2
+			else:
+				placex = 2
+		elif(node.alignment=="center"):
+			placex = (parentwidth-node.width)/2
+		elif(node.alignment=='right'):
+			placex = parentwidth-2-node.width
+		
+		# placey = parentheight+node['y']+2
+		placey = parentheight+2
+
+		print str(placex)+" "+str(placey)+"\n"
+
+		if(node.type == "span"):
+			# font = ImageFont.truetype("TNR.ttf", node['size'])
+			font = ImageFont.truetype("TNR.ttf", 16)
+			self.drawC.text((placex,placey),node.text,font=font)
+		elif(node.type == "img"):
+			img2 = Image.open(node.src)
+			#region = img2.crop(0,0,node.width,node.height) cropping
+			self.drawC.paste(img,(placex,placey))
+		elif(node.type == "div"):
+			for i in node.children:
+				self.img.show()
+				self.drawme(i,(node.width,self.lineheight))
+			self.lineheight+= node.height
+
+
 	def draw(self,layout,height=480,width=800):
 		# Chukka's Logic 
 		print "chukk "
+		self.img = Image.new('L',(width, height),'white')
+		self.drawC = ImageDraw.Draw(self.img)
+		self.lineheight = 2
+
+		self.drawme(layout.rootNode,(2,2))
+		self.img.show()
+		del self.drawC
 		pass
 
 
