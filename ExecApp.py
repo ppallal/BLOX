@@ -53,6 +53,7 @@ class WorkerThread(Thread):
 class ExecApp():
 	"""docstring for ExecApp"""
 	def __init__(self, appName, sendImage):
+		print appName
 		self.appName = appName
 		sys.path.insert(0, '/'+self.appName)
 		app = __import__(self.appName.lower())

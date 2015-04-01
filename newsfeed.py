@@ -13,16 +13,27 @@ class NewsFeed(BLOX):
 		feed = feedparser.parse('http://www.news.yahoo.com/rss')
 		self.titles = map(lambda x:x.title,feed.entries)
 		# Call layouts 
+		self.registerCommand("next",self.next,parellel=True)
 		self.renderLayout("Welcome") 
 		self.postNewsFeed()
+		self.i = 0
 
 		# Register intervals
 	def postNewsFeed(self):
-		for i in self.titles:
-			self.changeVariable("displayMesssage",i,"span","Welcome")
+		# for i in self.titles:
+		while(True):
+			if(self.i == len(self.titles)): i=0
+			self.changeVariable("displayMesssage",self.titles[self.i],"span","Welcome")
 			self.refreshScreen()
-			time.sleep(1)
+			time.sleep(3)
+
+	def next(self):
+		self.i += 1
+		if(self.i == len(self.titles)): i=0
+		self.changeVariable("displayMesssage",self.titles[self.i],"span","Welcome")
+		self.refreshScreen()
 		
+
 
 
 	# a function which cal be called at an interval 
