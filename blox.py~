@@ -88,8 +88,7 @@ class BLOX:
 			print "command not registered"
 			return False
 		self.commands[command] = (parellel,callback)
-		print command + "command registered"
-		#print self.commands
+		print "command registered"
 		return True
 
 

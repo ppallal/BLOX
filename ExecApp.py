@@ -11,15 +11,15 @@ class workerPool():
 		self.pool = []
 		self.exectutionQueue = []
 		for i in range(self.limit):
-			self.pool.append(WorkerThread(self.done,i))
+			self.pool.append(WorkerThread(i,self.done)) 
 
-	def done(threadId):
+	def done(self,threadId):    # what is this doing ??
 		if(self.exectutionQueue):
 			funcset = self.exectutionQueue.pop()
 			self.pool[threadId].setFunc(funcset[0],funcset[1])
 			self.pool.start()
 
-	def execFunc(func,funcScope=None):
+	def execFunc(self,func,funcScope=None):
 		for i in self.pool:
 			if(i.status == False):
 				i.setFunc(func,funcScope)
@@ -46,8 +46,9 @@ class WorkerThread(Thread):
 		self.status = True
 		func = getattr(self,'func')
 		func()
+		print "Returning from Func " + str(self.threadId) 
 		self.status = False
-		self.done(self.threadId)
+		self.done(self.threadId)            # ??
 
 
 class ExecApp():
@@ -68,9 +69,12 @@ class ExecApp():
 
 	def commandIn(self,command):
 		callBack = self.app.commands[command]
+		print " inside commandin exec"
 		if(callBack[0]):
-			self.tPool.execFunc(callBack)
+			print "calling if"
+			self.tPool.execFunc(callBack[1])
 		else:
+			print "calling else"
 			callBack[1]()
 
 	def start(self):
