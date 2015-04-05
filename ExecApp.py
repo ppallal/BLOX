@@ -85,50 +85,89 @@ class ExecApp():
 		self.sendImage(image)
 		pass
 
-	def drawme(self,node,(parentwidth,parentheight)):
-	
-		#place point
+	def drawme(self,node,(parentwidth,parentheight),parentx = 0,parenty = 0,SPACING_CONST = 2):
+			
 		placex,placey = 0,0
-		if(node.alignment == "left"):
-			if(hasattr(node,'x')):
-				placex = node.x+2
-			else:
-				placex = 2
-		elif(node.alignment=="center"):
-			placex = (parentwidth-node.width)/2
-		elif(node.alignment=='right'):
-			placex = parentwidth-2-node.width
-		
-		# placey = parentheight+node['y']+2
-		placey = parentheight+2
 
-		print str(placex)+" "+str(placey)+"\n"
+		if(node.type == 'text' or node.type == 'img'):
 
-		if(node.type == "span"):
-			# font = ImageFont.truetype("TNR.ttf", node['size'])
-			font = ImageFont.truetype("TNR.ttf", 70)
-			self.drawC.text((placex,placey),node.text,font=font)
+			if(node.type == 'text'):
+				self.font = ImageFont.truetype("TNR.ttf", node.size)
+				node.ewidth, node.eheight = self.drawC.textsize(node.text, font=self.font)
+
+			#placex
+			if(node.alignmentx == 'left'):
+				placex = parentx + SPACING_CONST
+			elif(node.alignmentx=='center'):
+				placex = parentx + (parentwidth / 2) - (node.ewidth/2)
+			elif(node.alignmentx=='right'):
+				placex = parentx + parentwidth - SPACING_CONST - node.ewidth
+
+			#placey
+			if(node.alignmenty =='top'):
+				placey = parenty + SPACING_CONST
+			elif(node.alignmenty == 'bottom'):
+				placey = parenty + parentheight - SPACING_CONST - node.eheight
+			elif(node.alignmenty == 'center'):
+				placey = parenty + (parentheight / 2) - (node.eheight/2)
+			
+			print "placex = "+str(placex)+" placey = "+str(placey)+";\n"
+
+		if(node.type == "text"):
+			self.drawC.text((placex,placey),node.text,font=self.font)
 		elif(node.type == "img"):
 			img2 = Image.open(node.src)
-			#region = img2.crop(0,0,node.width,node.height) cropping
-			self.drawC.paste(img,(placex,placey))
+			#region = img2.crop(0,0,node.width,node.height) #cropping
+			self.img.paste(img2,(placex,placey))
 		elif(node.type == "div"):
-			for i in node.children:
-				#self.img.show()
-				self.drawme(i,(node.width,self.lineheight))
-			self.lineheight+= node.height
 
+			#if root node
+			if(node.width == 0 and node.height == 0):
+				node.width = parentwidth
+				node.height = parentheight
+
+			# splitting
+			num = 0
+			pushxy = 0
+			for i in node.children:
+
+				#setting width and height
+
+				if(node.split == 0):	#horizontal split
+					i.width = node.width
+					i.height = (node.percentages[num]*node.height)/100;
+
+				elif(node.split == 1):	#vertical split
+					i.width = (node.percentages[num]*node.width)/100;
+					i.height = node.height
+				print "num = "+str(num)+";i.width="+str(i.width)+";i.height="+str(i.height)+";pushxy="+str(pushxy);
+
+				if(num == 0):
+					self.drawme(i,(node.width,node.height),parentx,parenty)
+				else:
+					if(node.split == 0): #horizontal split
+						self.drawme(i,(node.width,node.height),parentx,parenty+pushxy)
+					elif(node.split == 1):
+						self.drawme(i,(node.width,node.height),parentx+pushxy,parenty)
+
+				#pushxy
+				if(node.split == 0):	#horizontal split
+					pushxy = ((node.percentages[num]*parentheight)/100)+pushxy
+				elif(node.split == 1):	#vertical split
+					pushxy = ((node.percentages[num]*parentwidth)/100)+pushxy
+
+				num+=1
 
 	def draw(self,layout,height=480,width=800):
 		# Chukka's Logic 
-		print "chukk "
 		self.img = Image.new('L',(width, height),'white')
 		self.drawC = ImageDraw.Draw(self.img)
 		self.lineheight = 2
 
-		self.drawme(layout.rootNode,(2,2))
+		self.drawme(layout.rootNode,(width,height))
 		self.img.show()
 		del self.drawC
+		exit()
 		pass
 
 

@@ -1,20 +1,61 @@
+#parentx,parenty,parentwidth,parentheight
+
+#FOR ALL
+#node.width
+#node.height
+
+#FOR BOTH
+#node.alignmentx
+#node.alignmenty
+
+#TEXT
+#node.size
+#node.text
+#node.ewidth #element width and height
+#node.eheight
+
+#IMAGE
+#node.src
+#node.ewidth #element width and height
+#node.eheight
+
+#DIV
+#children = []
+#split #0 - horizontal 1 - vertical
+#node.percentages #(children's percentages) #(50,50) #(30,30,40)
+
 import xml.etree.ElementTree as ET
 
 class Element:
 	def __init__(self,node,layout):
 		self.type = node.tag
-		if(self.type == 'span'):
+		if(self.type =='text' or self.type == 'img'):
+			self.alignmentx = node.get('alignmentx',default='center')
+			self.alignmenty = node.get('alignmenty',default='center')
+		if(self.type == 'text'):
 			self.text = node.text.strip()
+			self.ewidth = 0
+			self.eheight = 0
+			self.size = int(node.get('size',default=12))
 		elif(self.type == 'img'):
 			self.src = node.get('src')
-		# if(self.type in ['div','span']):
-		self.children = []
-
-		self.width = int(node.get("width",default = False))
-		if(not self.width): self.width = 100
-		self.height = int(node.get("height",default = False))
-		if(not self.height): self.height = 100
-		self.alignment = node.get("align",default = False) 
+			self.ewidth = int(node.get('ewidth'))
+			self.eheight = int(node.get('eheight'))
+		elif(self.type == 'div'):
+			self.children = []
+			if(node.get('split') == "vertical"):
+				self.split = 1
+			elif(node.get('split') == "horizontal"):
+				self.split = 0
+			self.percentages= [int(i) for i in node.get('perc').strip().split(',')]
+			print self.percentages
+		self.width = 0;
+		self.height = 0;
+		# self.width = int(node.get("width",default = False))
+		# if(not self.width): self.width = 100
+		# self.height = int(node.get("height",default = False))
+		# if(not self.height): self.height = 100
+		#self.alignment = node.get("align",default = False) 
 		variables = node.get("var",default = False)
 		if(variables <> False):
 			variables = variables.split()
