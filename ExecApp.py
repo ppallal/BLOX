@@ -2,6 +2,8 @@ from threading import *
 import importlib
 import sys
 import Image, ImageFont, ImageDraw
+import json
+import pickle
 
 
 class workerPool():
@@ -26,6 +28,7 @@ class workerPool():
 				i.start()
 				return
 		self.exectutionQueue.append((func,funcScope))
+
 
 
 
@@ -66,6 +69,60 @@ class ExecApp():
 		# self.app = app
 		# print app.modules[self.appName]
 		self.app = getattr(app,self.appName)(self.renderImage)
+		self.status = True
+		self.tempImg = None
+
+	def install(self):
+		f = open(self.appName+".json","w")
+		f.write(json.dumps(self.app.commands.keys()))
+		f.close()
+
+	def dumpConfig():
+		
+		self.restoreFile = open(self.appName+".restore","w")
+		self.restoreThreadFile = open(self.appName+"-threads.restore","w")
+		self.restoremThreadFile = open(self.appName+"-mthread.restore","w")
+		
+		pickle.dump(self.app,self.restoreFile)
+		pickle.dump(self.tPool,self.restoreThreadFile)
+		pickle.dump(self.mainThread,self.restoremThreadFile)
+		
+		self.restoreFile.close()
+		self.restoreThreadFile.close()
+		self.restoremThreadFile.close()
+		
+
+		# pass
+
+
+	def switchIn(self):
+		"onResume()"
+		self.status = True
+		self.app.switchIn();
+		self.sendImage(self.tempImg)
+
+	def switchOut(self):
+		"onPause"
+		self.status = False
+		self.app.switchOut();
+
+
+	def onRestore(self):
+		self.restoreFile = open(self.appName+".restore","r")
+		self.restoreThreadFile = open(self.appName+"-threads.restore","r")
+		self.restoremThreadFile = open(self.appName+"-mthread.restore","r")
+		
+		self.app = pickle.load(self.restoreFile)
+		self.tPool = pickle.load(self.restoreThreadFile)
+		self.mainThread = pickle.load(self.restoremThreadFile)
+		
+		self.mainThread.run()
+		for i in self.tPool.pool:
+			i.run()
+
+		self.restoreFile.close()
+		self.restoreThreadFile.close()
+		self.restoremThreadFile.close()
 
 	def commandIn(self,command):
 		callBack = self.app.commands[command]
@@ -87,8 +144,9 @@ class ExecApp():
 
 	def renderImage(self,layout):
 		image = self.draw(layout)
-		self.sendImage(image)
-		pass
+		self.tempImg = image
+		if(self.status):
+			self.sendImage(image)
 
 	def drawme(self,node,(parentwidth,parentheight)):
 	
@@ -126,7 +184,6 @@ class ExecApp():
 
 	def draw(self,layout,height=480,width=800):
 		# Chukka's Logic 
-		print "chukk "
 		self.img = Image.new('L',(width, height),'white')
 		self.drawC = ImageDraw.Draw(self.img)
 		self.lineheight = 2

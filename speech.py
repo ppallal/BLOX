@@ -1,5 +1,6 @@
 import speech_recognition as sr
 r = sr.Recognizer()
+r.energy_threshold = 4500
 
 
 def callback(self, audio):

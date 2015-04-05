@@ -82,6 +82,14 @@ class BLOX:
 		# Create json of all commands
 
 
+	def switchIn(self):
+		pass
+
+	def switchOut(self):
+		pass
+
+	def onRestore(self):
+		pass
  
 	def registerCommand(self,command,callback,parellel=False):
 		if(not type(command) == type("")):
