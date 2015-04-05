@@ -3,6 +3,7 @@ import json
 import sys
 import threading
 import time
+from ExecApp import ExecApp
 sys.path.insert(1,'/home/Desktop/BLOX/apps/')
 app_commands = []    # pointer to apps start function , or file name or pointer to class ????
 #blox_commands = ["install newsfeed_links in 1","install newsfeed in 2","stop app_name"]
@@ -13,6 +14,7 @@ priority_app = {}
 threadi = {}   # key : app_name , value : respective thread class object
 importi = {}   #key : app_name , value : import object
 instancei = {}  #key : app_name , value : instance of app class
+Appi = {}
 
 class myThread (threading.Thread):
     def __init__(self, threadID, name,app_instance,ip):
@@ -49,7 +51,7 @@ def command_router(command):  #if command = app specefic , redirect it
 			command_handler(cmd)
 		else:
 			#app.command_in(cmd) #app should implement input_command method.
-			threadi[app].command_in("some cmd1")
+			Appi[app].commandIn(cmd)
 			#priority_app[app]+=1
 			last_app = app
 			
@@ -63,24 +65,13 @@ def install_app(app_name,screen_no,dont_download = 0):  # the app will register 
 		apps[app_name] = screen_no
 		with open('data.txt','w') as outfile:
 			json.dump(apps,outfile)
-	pmName = app_name
-	pm = __import__(pmName)
-	app = getattr(pm,pmName)     # name of class & file == name of app
-	app_instance = app()
-	#func1 = getattr(pm,'input_command')
-	print app_name
+	Appi[app_name] = ExecApp(app_name,lambda x:x)
+	Appi[app_name].start()
+	time.sleep(5)
+	print "printing registered cmds"
+	print Appi[app_name].app.commands
+	print "decoder" + app_name
 	print screen_no
-	threadi[app_name] = myThread(1,app_name,app_instance,screen_ip[screen_no])
-	importi[app_name] = pm
-	instancei[app_name] = app_instance
-	threadi[app_name].start()
-	#thread.start_new_thread(func,(screen_ip[screen_no],))
-	#	print "Unable to start " + app_name
-	#func(screen_ip[screen_no])
-	#pm = sys.path.append(pmName)
-	#app_name.start(screen_ip[screen_no])   # call the start function and pass respective screen ip
-	
-	
 	 
 def delete_app():
 	pass# uninstall app,delete app's code from the app folder
@@ -88,38 +79,37 @@ def delete_app():
 def start_app(app_name,screen_no):	# start the stopped app,can take time as parameter to get started automatically after sometime
 	for i in apps:			# check if some app is already running in that scree, if yes stop it.	
 		if (apps[i] == screen_no):
-			threadi[i].stop()
+			Appi[i].stop()
 			break
-	threadi[app_name].start(screen_ip[screen_no])
 	apps[app_name] = screen_no
+	Appi[app_name].start()
 		
 	
 
 
 def stop_app(app_name):   # stop temporarily but dont uninstall, can take time as parameter to get stopped automatically after sometime
-	threadi[app_name].stop()
+	Appi[app_name].stop()
 	apps[app_name] = 0
-	del threadi[app_name]
+	del Appi[app_name]
 
 def categorize(cmd):#return app_name if app specific cmmand,block if blox command , null if invalid
 	app_name = cmd.rsplit(' ',1)[1]
 	print cmd
 	cmd1 = cmd.rsplit(' ',1)[0]
 	if(app_name in apps):
-		cmds = getattr(importi[app_name],'command')
-		print cmds
-		if (cmd1 in cmds):
+		if (cmd1 in Appi[app_name].app.commands):
+			print "command found"
 			return (app_name,cmd1)
 	else:
 		keyword = cmd.split(' ')[0]
 		if(keyword in blox_commands):
 			return ("blox",cmd)
 		else:
-			if(cmd in last_app):
+			if(cmd in Appi[last_app].app.commands):
 				return (last_app,cmd)
 			for i in sorted(priority_app,key=priority_app.get,reverse = True):
 				if(i != last_app):
-					if(cmd in i.command):
+					if(cmd in Appi[i].app.commands):
 						return (i,cmd)
 			return ("invalid",0)
 			
@@ -150,10 +140,10 @@ def start_decoder():
 			install_app(app,screen,1)
 	
 	last_app = ""
-	command_router("blocks install newsfeed_links in 1")
-	command_router("blocks install newsfeed in 2")
+	# command_router("blocks install newsfeed_links in 1")
+	command_router("blocks install NewsFeed in 2")
 	time.sleep(10)
-	command_router("blocks next feed newsfeed_links")
+	# command_router("blocks next feed newsfeed_links")
 	apps['3']="some_app"
 	#threadi["newsfeed_links"].command_in("some cmd")
 
@@ -170,5 +160,13 @@ put apps in apps folder, fix the import problem
 #nf = newsfeed()
 #nf.start()
 
-command_router("blocks install newsfeed in 2")
+command_router("blocks install NewsFeed in 2")
+print "SENDING NEXT COMMAND"
+command_router("blocks next NewsFeed")
+print "SENDING NEXT INSTALL COMMAND "
+command_router("blocks install NewsFeed_links in 1")
+print "came back"
+
+# command_router("blocks start NewsFeed")
+# start_decoder()
 	

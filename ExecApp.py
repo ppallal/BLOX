@@ -2,6 +2,8 @@ from threading import *
 import importlib
 import sys
 import Image, ImageFont, ImageDraw
+import json
+import pickle
 
 
 class workerPool():
@@ -11,21 +13,22 @@ class workerPool():
 		self.pool = []
 		self.exectutionQueue = []
 		for i in range(self.limit):
-			self.pool.append(WorkerThread(self.done,i))
+			self.pool.append(WorkerThread(i,self.done)) 
 
-	def done(threadId):
+	def done(self,threadId):    # what is this doing ??
 		if(self.exectutionQueue):
 			funcset = self.exectutionQueue.pop()
 			self.pool[threadId].setFunc(funcset[0],funcset[1])
 			self.pool.start()
 
-	def execFunc(func,funcScope=None):
+	def execFunc(self,func,funcScope=None):
 		for i in self.pool:
 			if(i.status == False):
 				i.setFunc(func,funcScope)
 				i.start()
 				return
 		self.exectutionQueue.append((func,funcScope))
+
 
 
 
@@ -46,13 +49,15 @@ class WorkerThread(Thread):
 		self.status = True
 		func = getattr(self,'func')
 		func()
+		print "Returning from Func " + str(self.threadId) 
 		self.status = False
-		self.done(self.threadId)
+		self.done(self.threadId)            # ??
 
 
 class ExecApp():
 	"""docstring for ExecApp"""
 	def __init__(self, appName, sendImage):
+		print appName
 		self.appName = appName
 		sys.path.insert(0, '/'+self.appName)
 		app = __import__(self.appName.lower())
@@ -64,12 +69,69 @@ class ExecApp():
 		# self.app = app
 		# print app.modules[self.appName]
 		self.app = getattr(app,self.appName)(self.renderImage)
+		self.status = True
+		self.tempImg = None
+
+	def install(self):
+		f = open(self.appName+".json","w")
+		f.write(json.dumps(self.app.commands.keys()))
+		f.close()
+
+	def dumpConfig():
+		
+		self.restoreFile = open(self.appName+".restore","w")
+		self.restoreThreadFile = open(self.appName+"-threads.restore","w")
+		self.restoremThreadFile = open(self.appName+"-mthread.restore","w")
+		
+		pickle.dump(self.app,self.restoreFile)
+		pickle.dump(self.tPool,self.restoreThreadFile)
+		pickle.dump(self.mainThread,self.restoremThreadFile)
+		
+		self.restoreFile.close()
+		self.restoreThreadFile.close()
+		self.restoremThreadFile.close()
+		
+
+		# pass
+
+
+	def switchIn(self):
+		"onResume()"
+		self.status = True
+		self.app.switchIn();
+		self.sendImage(self.tempImg)
+
+	def switchOut(self):
+		"onPause"
+		self.status = False
+		self.app.switchOut();
+
+
+	def onRestore(self):
+		self.restoreFile = open(self.appName+".restore","r")
+		self.restoreThreadFile = open(self.appName+"-threads.restore","r")
+		self.restoremThreadFile = open(self.appName+"-mthread.restore","r")
+		
+		self.app = pickle.load(self.restoreFile)
+		self.tPool = pickle.load(self.restoreThreadFile)
+		self.mainThread = pickle.load(self.restoremThreadFile)
+		
+		self.mainThread.run()
+		for i in self.tPool.pool:
+			i.run()
+
+		self.restoreFile.close()
+		self.restoreThreadFile.close()
+		self.restoremThreadFile.close()
 
 	def commandIn(self,command):
 		callBack = self.app.commands[command]
+		print " inside commandin exec"
 		if(callBack[0]):
-			self.tPool.execFunc(callBack)
+			print "calling if"
+			self.tPool.execFunc(callBack[1])
 		else:
+			print "calling else"
 			callBack[1]()
 
 	def start(self):
@@ -82,8 +144,9 @@ class ExecApp():
 
 	def renderImage(self,layout):
 		image = self.draw(layout)
-		self.sendImage(image)
-		pass
+		self.tempImg = image
+		if(self.status):
+			self.sendImage(image)
 
 	def drawme(self,node,(parentwidth,parentheight),parentx = 0,parenty = 0,SPACING_CONST = 2):
 			
