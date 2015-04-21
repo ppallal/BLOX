@@ -170,3 +170,5 @@ print "came back"
 # command_router("blocks start NewsFeed")
 # start_decoder()
 	
+# Essential -- Niraj, During installation you need to take the source code of the person and replace his "import Blox" to give your copy of BLOX 
+# i.e. Either copy Blox.py on to his folder or modify his source code.

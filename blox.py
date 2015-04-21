@@ -114,14 +114,20 @@ class Layout:
 
 
 class BLOX:
-	def __init__(self,renderImage):
+	def __init__(self):
 		self.commands = {}
 		self.layouts = {}
 		self.activeLayoutID = ""
 		self.scopes = {}
-		self.renderImage = renderImage
+		# self.renderImage = renderImage
+		# self.doJob = doJob
 		# Create json of all commands
 
+	def setRenderImage(self,renderImage):
+		self.renderImage = renderImage
+
+	def setDoJob(self,doJob):
+		self.doJob = doJob
 
 	def switchIn(self):
 		pass
@@ -131,6 +137,9 @@ class BLOX:
 
 	def onRestore(self):
 		pass
+
+	# def doJob(self):
+		
  
 	def registerCommand(self,command,callback,parellel=False):
 		if(not type(command) == type("")):

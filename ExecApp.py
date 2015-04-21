@@ -6,20 +6,60 @@ import json
 import pickle
 
 
+
+
+
 class workerPool():
 	"""docstring for workerPool"""
 	def __init__(self, limit):
 		self.limit = limit
-		self.pool = []
+		self.pool = {}
+		self.freePool = set(range(self.limit))
 		self.exectutionQueue = []
+		self.semaphore = BoundedSemaphore(self.limit)
+		self.syncLock = BoundedSemaphore(1)
+		self.syncLock.acquire()
 		for i in range(self.limit):
-			self.pool.append(WorkerThread(i,self.done)) 
+			self.pool[i] = WorkerThread(i, self.exectutionQueue, self.syncLock, self.semaphore, self.freePool) 
 
-	def done(self,threadId):    # what is this doing ??
-		if(self.exectutionQueue):
-			funcset = self.exectutionQueue.pop()
-			self.pool[threadId].setFunc(funcset[0],funcset[1])
-			self.pool.start()
+	def done(self):    # what is this doing ??
+		pass
+		# if(self.exectutionQueue):
+		# 	funcset = self.exectutionQueue.pop()
+		# 	self.pool[threadId].setFunc(funcset[0],funcset[1])
+		# 	self.pool.start()
+
+	# Improvement -- Scheduler can make preemption of jjob etc to avoid deadlocks and starvations 
+	def scheduler(self):
+		while True:
+			# print " -- syncLock Waiting"
+			self.syncLock.acquire()
+			# print " -- syncLock Acquired"
+			self.semaphore.acquire()
+			# print " -- thread semaphore Acquired"
+			# print "--old --",self.exectutionQueue
+			job = self.exectutionQueue.pop()
+			# print "--new --",self.exectutionQueue
+			freeThreadId = self.freePool.pop()
+			self.pool[freeThreadId].setFunc(job)
+			self.pool[freeThreadId].start()
+			if(len(self.exectutionQueue) <> 0):
+				try:
+					self.syncLock.release()
+				except ValueError:
+					pass
+				# self.syncLock.release()
+
+
+
+	def doJob(self,job):
+		self.exectutionQueue.append(job)
+		try:
+			self.syncLock.release()
+		except ValueError:
+			pass
+
+
 
 	def execFunc(self,func,funcScope=None):
 		for i in self.pool:
@@ -29,29 +69,47 @@ class workerPool():
 				return
 		self.exectutionQueue.append((func,funcScope))
 
-
-
-
 		
 
 class WorkerThread(Thread):
-	def __init__(self,threadId,done):
+	def __init__(self,threadId, exectutionQueue, syncLock, semaphore = None , freePool = None):
 		Thread.__init__(self)
 		self.status = False
-		self.done = done
+		# self.done = done
 		self.threadId = threadId
+		self.semaphore = semaphore
+		self.syncLock = syncLock
+		self.freePool = freePool
+		self.exectutionQueue = exectutionQueue
 
-	def setFunc(self,func,app):
-		self.funcScope = app
+	def setFunc(self,func):
 		self.func = func
+
+	def doJob(self,job):
+		self.exectutionQueue.append(job)
+		# self.syncLock.release()
+		try:
+			self.syncLock.release()
+		except ValueError:
+			pass
+
+	def done(self):
+		if(self.freePool <> None): 
+			self.freePool.add(self.threadId)
+		if(self.semaphore <> None):
+			self.semaphore.release()
 
 	def run(self):
 		self.status = True
 		func = getattr(self,'func')
+		# print "Handling in " + str(self.threadId) 
 		func()
-		print "Returning from Func " + str(self.threadId) 
+		# print "Returning from Func " + str(self.threadId) 
 		self.status = False
-		self.done(self.threadId)            # ??
+		Thread.__init__(self)
+		self.done()            # ??
+
+		
 
 
 class ExecApp():
@@ -62,15 +120,18 @@ class ExecApp():
 		sys.path.insert(0, '/'+self.appName)
 		app = __import__(self.appName.lower())
 		self.threadLimit = 5
-		self.mainThread = WorkerThread("MainThread",lambda x:True)
-		self.sendImage = sendImage
 		self.tPool = workerPool(self.threadLimit)
+		self.mainThread = WorkerThread("MainThread",self.tPool.exectutionQueue,self.tPool.syncLock)
+		self.sendImage = sendImage
 		# import from the app
 		# self.app = app
 		# print app.modules[self.appName]
-		self.app = getattr(app,self.appName)(self.renderImage)
+		self.app = getattr(app,self.appName)()
+		self.app.setRenderImage(self.renderImage)
+		self.app.setDoJob(self.mainThread.doJob)
 		self.status = True
 		self.tempImg = None
+
 
 	def install(self):
 		f = open(self.appName+".json","w")
@@ -82,7 +143,6 @@ class ExecApp():
 		self.restoreFile = open(self.appName+".restore","w")
 		self.restoreThreadFile = open(self.appName+"-threads.restore","w")
 		self.restoremThreadFile = open(self.appName+"-mthread.restore","w")
-		
 		pickle.dump(self.app,self.restoreFile)
 		pickle.dump(self.tPool,self.restoreThreadFile)
 		pickle.dump(self.mainThread,self.restoremThreadFile)
@@ -135,8 +195,9 @@ class ExecApp():
 			callBack[1]()
 
 	def start(self):
-		self.mainThread.setFunc(self.app.start,self.app)
+		self.mainThread.setFunc(self.app.start)
 		self.mainThread.start()
+		self.tPool.scheduler()
 		pass		
 
 	def doInBackground(func):
@@ -241,3 +302,6 @@ if __name__ == '__main__':
 	else:
 		App = ExecApp('NewsFeed',lambda x:x)
 		App.start()
+
+
+# File Handling Capabalities Like Memory and stuff.
