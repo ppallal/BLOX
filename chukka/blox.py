@@ -67,6 +67,9 @@ class Element:
 					layout.scope[i]=[self]
 				else: 
 					layout.scope[i].append(self)
+			print "variables: "+str(variables)
+			print "layout.scope"+str(layout.scope)
+
 			
 
 	def addClild(self,child):
@@ -103,31 +106,24 @@ class Layout:
 		for i in nodes:
 			if(i.type == varType):
 				i.setValue(value)
-
-	
-
+				#print "scope: "+str(self.scope)	
 
 
 
-	
+
+
 # Same app running as different screen
 
 
 class BLOX:
-	def __init__(self):
+	def __init__(self,renderImage):
 		self.commands = {}
 		self.layouts = {}
 		self.activeLayoutID = ""
 		self.scopes = {}
-		# self.renderImage = renderImage
-		# self.doJob = doJob
+		self.renderImage = renderImage
 		# Create json of all commands
 
-	def setRenderImage(self,renderImage):
-		self.renderImage = renderImage
-
-	def setDoJob(self,doJob):
-		self.doJob = doJob
 
 	def switchIn(self):
 		pass
@@ -137,9 +133,6 @@ class BLOX:
 
 	def onRestore(self):
 		pass
-
-	# def doJob(self):
-		
  
 	def registerCommand(self,command,callback,parellel=False):
 		if(not type(command) == type("")):

@@ -1,0 +1,14 @@
+<div perc="50,50" split="horizontal">
+	<text size="14" alignmentx="center" alignmenty="top">
+		Hey! I'm here.
+	</text>
+	<div perc="30,30,40" split="vertical">
+		<img src="logo.png" eheight="200" ewidth="200" alignmentx="left" alignmenty="bottom"></img>
+		<text size="14" alignmentx="left" var="displayMesssage" alignmenty="center">
+			Hey! What's up?
+		</text>
+		<text size="14" alignmentx="left" alignmenty="center">
+			Hey! How are you?
+		</text>
+	</div>
+</div>

@@ -3,7 +3,7 @@
 		Hey! I'm here.
 	</text>
 	<div perc="30,30,40" split="vertical">
-		<text size="8" alignmentx="left" var="displayMesssage" alignmenty="center">
+		<text size="8" alignmentx="left" alignmenty="center">
 			Satya Sir
 		</text>
 		<text size="8" alignmentx="left" alignmenty="top">

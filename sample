@@ -1,0 +1,14 @@
+file will contain list of commands.
+
+
+my DS
+
+app_fuzzy_command
+
+{ app_name1 : {fuzzy : command1,fuzzy : c2 .. },app_name2 : {fuzzy : c1,fuzzy : c2 ...}...}
+
+fuzzy_app
+
+{fuzzy : app1 , fuzzy : app2 ......}
+
+priority_app : list of apps based on priority

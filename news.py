@@ -2,7 +2,7 @@ from blox import BLOX
 import feedparser
 import time
 
-class NewsFeed(BLOX):
+class news(BLOX):
 	def __init__(self):
 		BLOX.__init__(self)
 
@@ -13,10 +13,10 @@ class NewsFeed(BLOX):
 		feed = feedparser.parse('http://www.news.yahoo.com/rss')
 		self.titles = map(lambda x:x.title,feed.entries)
 		# Call layouts 
+		self.i = 0
 		self.registerCommand("next",self.next,parellel=True)
 		self.renderLayout("Welcome") 
-		self.i = 0
-		self.doJob(self.postNewsFeed)
+		# self.doJob(self.postNewsFeed)
 		# self.doJob(self.print_a)
 		# self.doJob(self.print_b)
 		# time.sleep(50)
@@ -40,7 +40,7 @@ class NewsFeed(BLOX):
 		# for i in self.titles:
 		while(True):
 			if(self.i == len(self.titles)): i=0
-			self.changeVariable("displayMesssage",self.titles[self.i],"span","Welcome")
+			self.changeVariable("displayMesssage",self.titles[self.i],"text","Welcome")
 			self.refreshScreen()
 			time.sleep(3)
 
@@ -48,7 +48,8 @@ class NewsFeed(BLOX):
 		print "Inside next command handler"
 		self.i += 1
 		if(self.i == len(self.titles)): i=0
-		self.changeVariable("displayMesssage",self.titles[self.i],"span","Welcome")
+		print self.titles[self.i]
+		self.changeVariable("displayMesssage",self.titles[self.i],"text","Welcome")
 		self.refreshScreen()
 		
 

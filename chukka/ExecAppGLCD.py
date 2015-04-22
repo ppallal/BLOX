@@ -1,66 +1,26 @@
 from threading import *
 import importlib
 import sys
+import os
 import Image, ImageFont, ImageDraw
 import json
-import time
-import pickle
-
-
-
+import pickle		
 
 
 class workerPool():
 	"""docstring for workerPool"""
 	def __init__(self, limit):
 		self.limit = limit
-		self.pool = {}
-		self.freePool = set(range(self.limit))
+		self.pool = []
 		self.exectutionQueue = []
-		self.semaphore = BoundedSemaphore(self.limit)
-		self.syncLock = BoundedSemaphore(1)
-		self.syncLock.acquire()
 		for i in range(self.limit):
-			self.pool[i] = WorkerThread(i, self.exectutionQueue, self.syncLock, self.semaphore, self.freePool) 
+			self.pool.append(WorkerThread(i,self.done)) 
 
-	def done(self):    # what is this doing ??
-		pass
-		# if(self.exectutionQueue):
-		# 	funcset = self.exectutionQueue.pop()
-		# 	self.pool[threadId].setFunc(funcset[0],funcset[1])
-		# 	self.pool.start()
-
-	# Improvement -- Scheduler can make preemption of jjob etc to avoid deadlocks and starvations 
-	def scheduler(self):
-		while True:
-			# print " -- syncLock Waiting"
-			self.syncLock.acquire()
-			# print " -- syncLock Acquired"
-			self.semaphore.acquire()
-			# print " -- thread semaphore Acquired"
-			# print "--old --",self.exectutionQueue
-			job = self.exectutionQueue.pop()
-			# print "--new --",self.exectutionQueue
-			freeThreadId = self.freePool.pop()
-			self.pool[freeThreadId].setFunc(job)
-			self.pool[freeThreadId].start()
-			if(len(self.exectutionQueue) <> 0):
-				try:
-					self.syncLock.release()
-				except ValueError:
-					pass
-				# self.syncLock.release()
-
-
-
-	def doJob(self,job):
-		self.exectutionQueue.append(job)
-		try:
-			self.syncLock.release()
-		except ValueError:
-			pass
-
-
+	def done(self,threadId):    # what is this doing ??
+		if(self.exectutionQueue):
+			funcset = self.exectutionQueue.pop()
+			self.pool[threadId].setFunc(funcset[0],funcset[1])
+			self.pool.start()
 
 	def execFunc(self,func,funcScope=None):
 		for i in self.pool:
@@ -70,72 +30,50 @@ class workerPool():
 				return
 		self.exectutionQueue.append((func,funcScope))
 
+
+
+
 		
 
 class WorkerThread(Thread):
-	def __init__(self,threadId, exectutionQueue, syncLock, semaphore = None , freePool = None):
+	def __init__(self,threadId,done):
 		Thread.__init__(self)
 		self.status = False
-		# self.done = done
+		self.done = done
 		self.threadId = threadId
-		self.semaphore = semaphore
-		self.syncLock = syncLock
-		self.freePool = freePool
-		self.exectutionQueue = exectutionQueue
 
-	def setFunc(self,func):
+	def setFunc(self,func,app):
+		self.funcScope = app
 		self.func = func
-
-	def doJob(self,job):
-		self.exectutionQueue.append(job)
-		# self.syncLock.release()
-		try:
-			self.syncLock.release()
-		except ValueError:
-			pass
-
-	def done(self):
-		if(self.freePool <> None): 
-			self.freePool.add(self.threadId)
-		if(self.semaphore <> None):
-			self.semaphore.release()
 
 	def run(self):
 		self.status = True
 		func = getattr(self,'func')
-		# print "Handling in " + str(self.threadId) 
 		func()
-		# print "Returning from Func " + str(self.threadId) 
+		print "Returning from Func " + str(self.threadId) 
 		self.status = False
-		Thread.__init__(self)
-		self.done()            # ??
-
-		
+		self.done(self.threadId)            # ??
 
 
 class ExecApp():
 	"""docstring for ExecApp"""
 	def __init__(self, appName, sendImage):
-		print appName
 		self.chui = 0
-
+		print appName
 		self.appName = appName
-		sys.path.insert(0, '/'+self.appName)
-		app = __import__(self.appName.lower())
+		sys.path.append('APPS/'+self.appName)
+		#app = __import__(self.appName.lower())
+		app = __import__(self.appName)
 		self.threadLimit = 5
-		self.tPool = workerPool(self.threadLimit)
-		self.mainThread = WorkerThread("MainThread",self.tPool.exectutionQueue,self.tPool.syncLock)
-		self.schedulerThread = WorkerThread("schedulerThread",self.tPool.exectutionQueue,self.tPool.syncLock)
+		self.mainThread = WorkerThread("MainThread",lambda x:True)
 		self.sendImage = sendImage
+		self.tPool = workerPool(self.threadLimit)
 		# import from the app
 		# self.app = app
 		# print app.modules[self.appName]
-		self.app = getattr(app,self.appName)()
-		self.app.setRenderImage(self.renderImage)
-		self.app.setDoJob(self.mainThread.doJob)
+		self.app = getattr(app,self.appName)(self.renderImage)
 		self.status = True
 		self.tempImg = None
-
 
 	def install(self):
 		f = open(self.appName+".json","w")
@@ -147,6 +85,7 @@ class ExecApp():
 		self.restoreFile = open(self.appName+".restore","w")
 		self.restoreThreadFile = open(self.appName+"-threads.restore","w")
 		self.restoremThreadFile = open(self.appName+"-mthread.restore","w")
+		
 		pickle.dump(self.app,self.restoreFile)
 		pickle.dump(self.tPool,self.restoreThreadFile)
 		pickle.dump(self.mainThread,self.restoremThreadFile)
@@ -193,27 +132,25 @@ class ExecApp():
 		print " inside commandin exec"
 		if(callBack[0]):
 			print "calling if"
-			# self.tPool.execFunc(callBack[1])
-			self.tPool.doJob(callBack[1])
+			self.tPool.execFunc(callBack[1])
 		else:
 			print "calling else"
 			callBack[1]()
 
 	def start(self):
-		self.mainThread.setFunc(self.app.start)
+		self.mainThread.setFunc(self.app.start,self.app)
 		self.mainThread.start()
-		self.schedulerThread.setFunc(self.tPool.scheduler)
-		self.schedulerThread.start()
 		pass		
 
 	def doInBackground(func):
 		pass
 
 	def renderImage(self,layout):
-		image = self.draw(layout)
-		self.tempImg = image
+		self.draw(layout)
+		# self.tempImg = image
+		data = self.getStringCharArray(list(self.img.getdata()),width,height)
 		if(self.status):
-			self.sendImage(image)
+			self.sendImage(data)
 
 	def getStringCharArray(self,monochrome,width=128,height=64): #monochrome is a list of 255 and 0s #GLCD 8 bits
 		finalStringHexArray = list()
@@ -231,6 +168,8 @@ class ExecApp():
 				finalStringHexArray.append(hex(int(tempStringHex[::-1],2)))
 		print finalStringHexArray
 		return finalStringHexArray
+
+
 
 
 	def drawme(self,node,(parentwidth,parentheight),parentx = 0,parenty = 0,SPACING_CONST = 1):
@@ -306,7 +245,6 @@ class ExecApp():
 
 				num+=1
 
-
 	def draw(self,layout,height=64,width=128):
 		# Chukka's Logic 
 		self.img = Image.new('1',(width, height),'white')
@@ -315,9 +253,8 @@ class ExecApp():
 		self.lineheight = 0
 		self.drawme(layout.rootNode,(width,height))
 		self.img.show()
-		self.img.save("news.jpg","JPEG")
 
-		self.sendThisString = self.getStringCharArray(list(self.img.getdata()),width,height); #for GLCD
+		# self.sendThisString = self.getStringCharArray(list(self.img.getdata()),width,height); #for GLCD
 		
 		#self.img.save("crap.ppm", "PPM");
 		# del self.drawC
@@ -327,27 +264,11 @@ class ExecApp():
 		
 		pass
 
-	# def draw(self,layout,height=480,width=800):
-	# 	# Chukka's Logic 
-	# 	self.img = Image.new('L',(width, height),'white')
-	# 	self.drawC = ImageDraw.Draw(self.img)
-	# 	self.lineheight = 2
-
-	# 	self.drawme(layout.rootNode,(width,height))
-	# 	print "Showing Image"
-	# 	time.sleep(20)
-	# 	del self.drawC
-	# 	# exit()
-	# 	pass
-
-
 if __name__ == '__main__':
 	if(len(sys.argv)==2):
 		App = ExecApp(sys.argv[1],lambda x:x)
 		App.start()
 	else:
-		App = ExecApp('NewsFeed',lambda x:x)
+		#App = ExecApp('NewsFeed',lambda x:x)
+		App = ExecApp('TwitterFeed',lambda x:x)
 		App.start()
-
-
-# File Handling Capabalities Like Memory and stuff.

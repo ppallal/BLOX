@@ -1,0 +1,8 @@
+<div perc="30,70" split="horizontal">
+	<text size="8" alignmentx="center" alignmenty="top">
+		Twitter
+	</text>
+	<text size="8" alignmentx="left" alignmenty="top" var="tweet">
+			Tweet
+	</text>
+</div>
