@@ -32,7 +32,7 @@ class twitter(BLOX):
 	def postTwitterFeed(self):
 		# for i in self.titles:
 		while(True):
-			if(self.i == len(self.tweets)): i=0
+			if(self.i == len(self.tweets)): self.i=0
 			self.changeVariable("tweet",self.tweets[self.i],"text","Layout")
 			self.refreshScreen()
 			self.i+=1
@@ -41,7 +41,7 @@ class twitter(BLOX):
 	def next(self):
 		print "Inside next command handler"
 		self.i += 1
-		if(self.i == len(self.tweets)): i=0
+		if(self.i == len(self.tweets)): self.i=0
 		self.changeVariable("tweet",self.tweets[self.i],"text","Layout")
 		self.refreshScreen()
 		

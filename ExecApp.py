@@ -21,7 +21,8 @@ class workerPool():
 		self.syncLock = BoundedSemaphore(1)
 		self.syncLock.acquire()
 		for i in range(self.limit):
-			self.pool[i] = WorkerThread(i, self.exectutionQueue, self.syncLock, self.semaphore, self.freePool) 
+			self.pool[i] = WorkerThread(i, self.exectutionQueue, self.syncLock, self.semaphore, self.freePool)
+			self.pool[i].daemon = True
 
 	def done(self):    # what is this doing ??
 		pass
@@ -81,7 +82,9 @@ class WorkerThread(Thread):
 		self.semaphore = semaphore
 		self.syncLock = syncLock
 		self.freePool = freePool
+		# self.daemon = True
 		self.exectutionQueue = exectutionQueue
+		# self.daemon = True
 
 	def setFunc(self,func):
 		self.func = func
@@ -125,7 +128,9 @@ class ExecApp():
 		self.threadLimit = 5
 		self.tPool = workerPool(self.threadLimit)
 		self.mainThread = WorkerThread("MainThread",self.tPool.exectutionQueue,self.tPool.syncLock)
+		self.mainThread.daemon = True
 		self.schedulerThread = WorkerThread("schedulerThread",self.tPool.exectutionQueue,self.tPool.syncLock)
+		self.schedulerThread.daemon = True
 		self.sendImage = sendImage
 		# import from the app
 		# self.app = app
@@ -161,12 +166,18 @@ class ExecApp():
 
 	def switchIn(self):
 		"onResume()"
+		print "switchIn",self.appName
+		if(self.status):
+			return
 		self.status = True
 		self.app.switchIn();
 		self.sendImage(self.tempImg)
 
 	def switchOut(self):
 		"onPause"
+		print "switchOut",self.appName
+		if(not self.status):
+			return
 		self.status = False
 		self.app.switchOut();
 
@@ -189,7 +200,7 @@ class ExecApp():
 		self.restoremThreadFile.close()
 
 	def commandIn(self,command):
-		callBack = self.app.commands[command]
+		callBack = self.app.commands[command.lower()]
 		print " inside commandin exec"
 		if(callBack[0]):
 			print "calling if"
@@ -212,9 +223,9 @@ class ExecApp():
 	def renderImage(self,layout):
 		self.draw(layout)
 		# self.tempImg = image
-		data = self.getStringCharArray(list(self.img.getdata()))
+		self.tempImg = self.getStringCharArray(list(self.img.getdata()))
 		if(self.status):
-			self.sendImage(data)
+			self.sendImage(self.tempImg)
 			# self.sendImage(image)
 
 	def getStringCharArray(self,monochrome,width=128,height=64): #monochrome is a list of 255 and 0s #GLCD 8 bits
@@ -231,7 +242,7 @@ class ExecApp():
 						tempStringHex += '1'
 
 				finalStringHexArray.append(int(tempStringHex[::-1],2))
-		print finalStringHexArray
+		# print finalStringHexArray
 		return finalStringHexArray
 
 
@@ -261,7 +272,7 @@ class ExecApp():
 			elif(node.alignmenty == 'center'):
 				placey = parenty + (parentheight / 2) - (node.eheight/2)
 			
-			print "placex = "+str(placex)+" placey = "+str(placey)+";\n"
+			# print "placex = "+str(placex)+" placey = "+str(placey)+";\n"
 
 		if(node.type == "text"):
 			self.drawC.text((placex,placey),node.text,font=self.font)
@@ -290,7 +301,7 @@ class ExecApp():
 				elif(node.split == 1):	#vertical split
 					i.width = (node.percentages[num]*node.width)/100;
 					i.height = node.height
-				print "num = "+str(num)+";i.width="+str(i.width)+";i.height="+str(i.height)+";pushxy="+str(pushxy);
+				# print "num = "+str(num)+";i.width="+str(i.width)+";i.height="+str(i.height)+";pushxy="+str(pushxy);
 
 				if(num == 0):
 					self.drawme(i,(node.width,node.height),parentx,parenty)

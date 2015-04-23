@@ -5,6 +5,7 @@ import time
 import fuzzy
 from ExecApp import ExecApp
 from socket_server import SocketPicture
+import traceback
 
 
 soundex = fuzzy.Soundex(4)
@@ -40,6 +41,14 @@ def command_router(command):  #if command = app specefic , redirect it
                 print "sending to app cmd handler ",cmd
                 print app,cmd
             	Appi[app].commandIn(cmd.lower())
+                for i in apps:          # check if some app is already running in that scree, if yes stop it.   
+                    if (apps[i] == apps[app]):
+                        Appi[i].switchOut()
+                        # break
+                            
+                # Appi[i].switchOut()
+
+                Appi[app].switchIn()
                 last_app = app
     else:
         pass#print "do nothing"#do nothing
@@ -94,7 +103,7 @@ def delete_app():
 def start_app(app_name,screen_no):	# start the stopped app,can take time as parameter to get started automatically after sometime
     for i in apps:			# check if some app is already running in that scree, if yes stop it.	
         if (apps[i] == screen_no):
-            Appi[i].stop()
+            Appi[i].switchOut()
             break
     apps[app_name] = screen_no
     appnameCopy = app_name[0:]
@@ -249,6 +258,7 @@ if __name__ == '__main__':
     # print r.energy_threshold
     r.energy_threshold = 4500
     server = SocketPicture()
+    server.daemon = True
     server.start()
     while(1):
         # print "start"
@@ -267,4 +277,5 @@ if __name__ == '__main__':
             command_router(s)
             print "="*60
         except LookupError: # speech is unintelligible
-            print("Could not understand audio")
+            traceback.print_exc(file=sys.stdout)
+            # print("Could not understand audio")

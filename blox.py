@@ -186,7 +186,7 @@ class BLOX:
 		# self.sendImage()
 		print  '-'*70
 		print "\t\tThe screen is now being displayed"
-		print "\t\t\t\t",self.activeLayoutID 		
+		print "\t\t\t\t", self.activeLayoutID, self.__class__.__name__		
 		print  '-'*70
 
 	def setInterval():
@@ -203,6 +203,8 @@ class BLOX:
 
 	def start(self):
 		print self.__class__,"Starting ..."
+		self.registerCommand("show",lambda : True,parellel=True)
+
 
 	def pause(self):
 		# take care of max size of program and shit
