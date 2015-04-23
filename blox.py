@@ -155,7 +155,8 @@ class BLOX:
 		if(not type(layoutId) == type("")):
 			print "command not registered"
 			return False
-		layoutFile = open(layoutFileName,"r")
+		print __name__
+		layoutFile = open("apps/"+self.__class__.__name__.lower()+"/"+layoutFileName,"r")
 		layoutXml = layoutFile.read()
 	 # create layout and scope and assign to scopes
 	 	newLayout = Layout(layoutXml)

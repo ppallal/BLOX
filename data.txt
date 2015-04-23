@@ -1,1 +1,1 @@
-{"NewsFeed": "2", "NewsFeed_links": "1"}
+{"NewsFeed": "2"}

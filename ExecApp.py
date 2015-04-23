@@ -210,10 +210,12 @@ class ExecApp():
 		pass
 
 	def renderImage(self,layout):
-		image = self.draw(layout)
-		self.tempImg = image
+		self.draw(layout)
+		# self.tempImg = image
+		data = self.getStringCharArray(list(self.img.getdata()))
 		if(self.status):
-			self.sendImage(image)
+			self.sendImage(data)
+			# self.sendImage(image)
 
 	def getStringCharArray(self,monochrome,width=128,height=64): #monochrome is a list of 255 and 0s #GLCD 8 bits
 		finalStringHexArray = list()
@@ -228,7 +230,7 @@ class ExecApp():
 					else: # v is 0
 						tempStringHex += '1'
 
-				finalStringHexArray.append(hex(int(tempStringHex[::-1],2)))
+				finalStringHexArray.append(int(tempStringHex[::-1],2))
 		print finalStringHexArray
 		return finalStringHexArray
 
@@ -317,12 +319,13 @@ class ExecApp():
 		self.img.show()
 		self.img.save("news.jpg","JPEG")
 
-		self.sendThisString = self.getStringCharArray(list(self.img.getdata()),width,height); #for GLCD
+		# self.sendThisString = self.getStringCharArray(list(self.img.getdata()),width,height); #for GLCD
 		
 		#self.img.save("crap.ppm", "PPM");
 		# del self.drawC
 		if(self.chui==4):
-			exit()
+			# exit()
+			pass
 		self.chui+=1
 		
 		pass

@@ -77,6 +77,7 @@ def categorize(cmd):#return app_name if app specific cmmand,block if blox comman
 
 	
 def install_app(app_name,screen_no,dont_download = 0):  # the app will register itself with decoder, will get callback when command for that app comes
+    sys.path.insert(1,"apps/"+app_name.lower()+"/")
     if(not dont_download):
         pass # temporary
 		#download the app's code and keep it in apps folder
@@ -99,7 +100,7 @@ def start_app(app_name,screen_no):	# start the stopped app,can take time as para
     appnameCopy = app_name[0:]
     appn = list(app_name)
     fuzzy_app[soundex(appnameCopy)] = appnameCopy
-    fname = "".join(appn)+'.txt'
+    fname = "apps/"+"".join(appn)+"/"+"".join(appn)+'.txt'
     print fuzzy_app
     with open(fname) as f:
         command_list = f.readlines()

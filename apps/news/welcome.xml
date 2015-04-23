@@ -1,0 +1,8 @@
+<div perc="20,80" split="horizontal">
+	<text size="8" alignmentx="center" alignmenty="top">
+		Live News Feed !
+	</text>
+	<text size="8" alignmentx="left" var="displayMesssage" alignmenty="center">
+		Welcome to NewsFeed App On BLOX	! :)
+	</text>
+</div>
