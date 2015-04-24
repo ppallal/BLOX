@@ -37,6 +37,8 @@ class Element:
 			self.ewidth = 0
 			self.eheight = 0
 			self.size = int(node.get('size',default=12))
+			if(node.get('wraparound')):
+				self.wraparound = int(node.get('wraparound'))
 		elif(self.type == 'img'):
 			self.src = node.get('src')
 			self.ewidth = int(node.get('ewidth'))
@@ -49,6 +51,10 @@ class Element:
 				self.split = 0
 			self.percentages= [int(i) for i in node.get('perc').strip().split(',')]
 			print self.percentages
+		print "border check",node.get('border')
+		if(node.get('border')):
+			self.border = node.get('border')
+			print "border is there ",self.border
 		self.width = 0;
 		self.height = 0;
 		# self.width = int(node.get("width",default = False))

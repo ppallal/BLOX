@@ -120,7 +120,7 @@ class ExecApp():
 		self.chui = 0
 
 		self.appName = appName
-		sys.path.insert(0, '/'+self.appName)
+		sys.path.insert(0, 'apps/'+self.appName)
 		app = __import__(self.appName.lower())
 		self.threadLimit = 5
 		self.tPool = workerPool(self.threadLimit)
@@ -234,16 +234,57 @@ class ExecApp():
 		print finalStringHexArray
 		return finalStringHexArray
 
+	def getSplitTexts(self,text,txtsize,(parentwidth,parentheight),SPACING_CONST=2):
+		parentwidth = parentwidth - SPACING_CONST
+		returnText = []
+		lines = 1
+		txtwidth = txtsize/2
+		temptext = text
+		if(len(text)*txtwidth<=parentwidth):
+			return list([text])
+		while((len(temptext)*txtwidth)>parentwidth):
+			returnText.append(temptext[:int(parentwidth/txtwidth)])
+			# print temptext
+			temptext = temptext[int(parentwidth/txtwidth):]
+			if(parentheight<(lines*txtsize)):
+				break;
+			lines += 1
+		print returnText
+		return returnText
 
-	def drawme(self,node,(parentwidth,parentheight),parentx = 0,parenty = 0,SPACING_CONST = 1):
+	def getTextSize(self,text,txtsize):
+		height = txtsize
+		width = (txtsize/2)*len(text)
+		return width,height
+
+
+
+	def drawme(self,node,(parentwidth,parentheight),parentx = 0,parenty = 0,SPACING_CONST = 2):
 			
-		placex,placey = 0,0
+		#border
+		if hasattr(node, 'border'):
+			borders = map(lambda x:int(x), node.border.split(',')) #top, right, bottom, left
+			print "borders ",borders
+			print "parentx:",parentx," parenty:",parenty," node.width:",node.width," node.height:",node.height," borders:",borders
+			for i in range(0,4):
+				if borders[i]>0:
+					if i==0:
+						self.drawC.line((parentx,parenty,parentx+node.width,parenty),"black",borders[i])
+					elif i==1:
+						self.drawC.line((parentx+node.width,parenty,parentx+node.width,parenty+node.height),"black",borders[i])
+					elif i==2:
+						self.drawC.line((parentx,parenty+node.height,parentx+node.width,parenty+node.height),"black",borders[i])
+					elif i==3:
+						self.drawC.line((parentx,parenty,parentx,parenty+node.height),"black",borders[i])
 
+		#placing text and images
+		placex,placey = 0,0
 		if(node.type == 'text' or node.type == 'img'):
 
 			if(node.type == 'text'):
 				self.font = ImageFont.truetype("small5x3.ttf", node.size)
-				node.ewidth, node.eheight = self.drawC.textsize(node.text, font=self.font)
+				# node.ewidth, node.eheight = self.drawC.textsize(node.text, font=self.font)
+				node.ewidth, node.eheight = self.getTextSize(node.text, node.size)
 
 			#placex
 			if(node.alignmentx == 'left'):
@@ -264,9 +305,15 @@ class ExecApp():
 			print "placex = "+str(placex)+" placey = "+str(placey)+";\n"
 
 		if(node.type == "text"):
-			self.drawC.text((placex,placey),node.text,font=self.font)
+			if hasattr(node,'wraparound'):
+				ply = placey
+				for i in self.getSplitTexts(node.text,node.size,(parentwidth,parentheight),SPACING_CONST):
+					self.drawC.text((placex,ply),i,font=self.font)
+					ply+=8
+			else:	
+				self.drawC.text((placex,placey),node.text,font=self.font)
 		elif(node.type == "img"):
-			img2 = Image.open(node.src)
+			img2 = Image.open("apps/"+self.appName+"/"+node.src)
 			#region = img2.crop(0,0,node.width,node.height) #cropping
 			self.img.paste(img2,(placex,placey))
 		elif(node.type == "div"):
@@ -275,6 +322,7 @@ class ExecApp():
 			if(node.width == 0 and node.height == 0):
 				node.width = parentwidth
 				node.height = parentheight
+
 
 			# splitting
 			num = 0
@@ -285,19 +333,19 @@ class ExecApp():
 
 				if(node.split == 0):	#horizontal split
 					i.width = node.width
-					i.height = (node.percentages[num]*node.height)/100;
+					i.height = (node.percentages[num]*node.height)/100
 
 				elif(node.split == 1):	#vertical split
-					i.width = (node.percentages[num]*node.width)/100;
+					i.width = (node.percentages[num]*node.width)/100
 					i.height = node.height
-				print "num = "+str(num)+";i.width="+str(i.width)+";i.height="+str(i.height)+";pushxy="+str(pushxy);
+				print "num = "+str(num)+";i.width="+str(i.width)+";i.height="+str(i.height)+";pushxy="+str(pushxy)
 
 				if(num == 0):
 					self.drawme(i,(node.width,node.height),parentx,parenty)
 				else:
 					if(node.split == 0): #horizontal split
 						self.drawme(i,(node.width,node.height),parentx,parenty+pushxy)
-					elif(node.split == 1):
+					elif(node.split == 1): #vertical split
 						self.drawme(i,(node.width,node.height),parentx+pushxy,parenty)
 
 				#pushxy
@@ -307,6 +355,7 @@ class ExecApp():
 					pushxy = ((node.percentages[num]*parentwidth)/100)+pushxy
 
 				num+=1
+
 
 
 	def draw(self,layout,height=64,width=128):
@@ -349,7 +398,7 @@ if __name__ == '__main__':
 		App = ExecApp(sys.argv[1],lambda x:x)
 		App.start()
 	else:
-		App = ExecApp('NewsFeed',lambda x:x)
+		App = ExecApp('twitter',lambda x:x)
 		App.start()
 
 
