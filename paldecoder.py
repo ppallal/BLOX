@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import json
 import sys
 import threading
@@ -58,29 +60,35 @@ def categorize(cmd):#return app_name if app specific cmmand,block if blox comman
     if(keyword in blox_commands):
         return ("blox",cmd)
     else: 
-        try:                                        # assuming app command and has app name . blox "command" app_name
-            app_name = cmd.rsplit(' ',1)[1]
+        try:                # assuming app command and has app name . blox "command" app_name
+            # app_name = cmd.rsplit(' ',1)[1]
+            app_name = cmd.split(' ',1)[0]
+
             app_name_soundex = soundex(app_name)
         except:
             pass
         else:
-            command = cmd.rsplit(' ',1)[0]
+            args = ""
+            command = cmd.split(' ',1)[1]
+            if(' ') in command : 
+                args = command.split(' ',1)[1]
+                command = command.split(' ',1)[0]
             command_soundex = soundex(command)
             if(app_name_soundex in fuzzy_app):
                 app_name_actual = fuzzy_app[app_name_soundex]
                 if(command_soundex in app_fuzzy_command[app_name_actual]):   # in that particular app
                     # print command_soundex,app_name_actual[command_soundex]
                     command_actual = app_fuzzy_command[app_name_actual][command_soundex]
-                    return(app_name_actual,command_actual)
+                    return(app_name_actual,command_actual + args)
     cmd_soundex = soundex(cmd)
     if(cmd_soundex in app_fuzzy_command[last_app]): # command list of last app
         command_actual = app_fuzzy_command[last_app[cmd_soundex]]
-        return (last_app,command_actual)
+        return (last_app,command_actual + args)
     for i in sorted(priority_app,key=priority_app.get,reverse = True):
         if(i != last_app):
             if(cmd_soundex in app_fuzzy_command[i]):
                 command_actual = app_fuzzy_command[i[cmd_soundex]]
-                return (i,command_actual)
+                return (i,command_actual + args)
     print "returning invalid"
     return ("invalid",0)
 
