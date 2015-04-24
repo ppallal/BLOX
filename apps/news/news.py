@@ -15,6 +15,7 @@ class news(BLOX):
 		# Call layouts 
 		self.i = 0
 		self.registerCommand("next",self.next,parellel=True)
+		self.registerCommand("on",self.fetch,parellel=True)
 		self.renderLayout("Welcome") 
 		# self.doJob(self.postNewsFeed)
 		# self.doJob(self.print_a)
@@ -51,8 +52,15 @@ class news(BLOX):
 		print self.titles[self.i]
 		self.changeVariable("displayMesssage",self.titles[self.i],"text","Welcome")
 		self.refreshScreen()
-		
 
+	def fetch(self,args):
+		# https://news.google.com/news/section?output=rss&pz=1&cf=all&ned=in&hl=en&q=Narendra
+		args = args.replace(" ","%20")
+		feed = feedparser.parse('https://news.google.com/news/section?output=rss&pz=1&cf=all&ned=in&hl=en&q='+args)
+		self.titles = map(lambda x:x.title,feed.entries)
+		self.i = 0
+		self.changeVariable("displayMesssage",self.titles[self.i],"text","Welcome")
+		self.refreshScreen()
 
 
 	# a function which cal be called at an interval 

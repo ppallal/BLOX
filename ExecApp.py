@@ -40,10 +40,17 @@ class workerPool():
 			self.semaphore.acquire()
 			# print " -- thread semaphore Acquired"
 			# print "--old --",self.exectutionQueue
+			args = False
 			job = self.exectutionQueue.pop()
+			if( type(job) == type((1,2)) ):
+				args = job[1]
+				job = job[0]
+
 			# print "--new --",self.exectutionQueue
 			freeThreadId = self.freePool.pop()
 			self.pool[freeThreadId].setFunc(job)
+			self.pool[freeThreadId].setArgs(args)
+
 			self.pool[freeThreadId].start()
 			if(len(self.exectutionQueue) <> 0):
 				try:
@@ -83,11 +90,15 @@ class WorkerThread(Thread):
 		self.syncLock = syncLock
 		self.freePool = freePool
 		# self.daemon = True
+		self.args = False
 		self.exectutionQueue = exectutionQueue
 		# self.daemon = True
 
 	def setFunc(self,func):
 		self.func = func
+
+	def setArgs(self,args):
+		self.args = args
 
 	def doJob(self,job):
 		self.exectutionQueue.append(job)
@@ -106,8 +117,11 @@ class WorkerThread(Thread):
 	def run(self):
 		self.status = True
 		func = getattr(self,'func')
-		# print "Handling in " + str(self.threadId) 
-		func()
+		# print "Handling in " + str(self.threadId)
+		if(not self.args): 
+			func()
+		else:
+			func(self.args)
 		# print "Returning from Func " + str(self.threadId) 
 		self.status = False
 		Thread.__init__(self)
@@ -123,6 +137,7 @@ class ExecApp():
 		self.chui = 0
 
 		self.appName = appName
+		sys.path.insert(0, 'apps/'+self.appName+"/")
 		sys.path.insert(0, '/'+self.appName)
 		app = __import__(self.appName.lower())
 		self.threadLimit = 5
@@ -200,15 +215,30 @@ class ExecApp():
 		self.restoremThreadFile.close()
 
 	def commandIn(self,command):
-		callBack = self.app.commands[command.lower()]
+		callBack = self.app.commands.get(command.lower(),False)
+		args = False
+		if(not callBack):
+			for i in self.app.commands:
+				if(command.lower().startswith(i)):
+					cmd = i
+					break
+
+			# return # Command Not UnderStood
+			else :
+				return 
+			
+			args = command.split(cmd)[1].strip()
+			callBack = self.app.commands[cmd.lower()]
+
+
 		print " inside commandin exec"
 		if(callBack[0]):
 			print "calling if"
 			# self.tPool.execFunc(callBack[1])
-			self.tPool.doJob(callBack[1])
+			self.tPool.doJob((callBack[1],args))
 		else:
 			print "calling else"
-			callBack[1]()
+			callBack[1](args)
 
 	def start(self):
 		self.mainThread.setFunc(self.app.start)
@@ -358,9 +388,12 @@ class ExecApp():
 if __name__ == '__main__':
 	if(len(sys.argv)==2):
 		App = ExecApp(sys.argv[1],lambda x:x)
+		App.mainThread.daemon = False
 		App.start()
+		time.sleep(100)
 	else:
 		App = ExecApp('NewsFeed',lambda x:x)
+		App.mainThread.daemon = False
 		App.start()
 
 

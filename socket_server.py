@@ -16,7 +16,7 @@ class SocketPicture(Thread):
 		host = socket.gethostname() # Get local machine name
 		port = 12345                # Reserve a port for your service.
 		# print self.s.bind((host, port))        # Bind to the port
-		print self.s.bind(("192.168.1.9", port))        # Bind to the port
+		print self.s.bind(("192.168.1.8", port))        # Bind to the port
 		print "-"*20
 		print "Server Started @",host,port 
 		self.s.listen(5)                 # Now wait for client connection.
