@@ -9,7 +9,6 @@ import pickle
 
 
 
-
 class workerPool():
 	"""docstring for workerPool"""
 	def __init__(self, limit):
@@ -291,6 +290,9 @@ class ExecApp():
 			if(parentheight<(lines*txtsize)):
 				break;
 			lines += 1
+
+		#last string
+		returnText.append(temptext)
 		print returnText
 		return returnText
 
@@ -349,7 +351,7 @@ class ExecApp():
 		if(node.type == "text"):
 			if hasattr(node,'wraparound'):
 				ply = placey
-				for i in self.getSplitTexts(node.text,node.size,(parentwidth,parentheight),SPACING_CONST):
+				for i in self.getSplitTexts(node.text,node.size,(node.width,node.height),SPACING_CONST):
 					self.drawC.text((placex,ply),i,font=self.font)
 					ply+=8
 			else:	
@@ -441,7 +443,7 @@ if __name__ == '__main__':
 		App.mainThread.daemon = False
 		App.start()
 		time.sleep(100)
-	else:
+	else:	
 		App = ExecApp('twitter',lambda x:x)
 		App.mainThread.daemon = False
 		App.start()

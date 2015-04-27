@@ -1,16 +1,13 @@
-<div perc="30,70" split="horizontal">
-	<div perc="40,60" split="vertical">
-		<text size="8" alignmentx="left" alignmenty="bottom" var="tweetname">
-			Tweet Name
-		</text>
-		<div perc="20,80" split="vertical" >
-			<img src="twitter_logo.pbm" alignmentx="left" alignmenty="bottom" ewidth="22" eheight="18"></img>
-			<text size="10" alignmentx="left" alignmenty="center">
-				Twitter
-			</text>
-		</div>
-	</div>
-	<text size="8" alignmentx="left" alignmenty="top" var="tweet" border="1,0,0,0" wraparound="1">
-			Tweet
+<div perc="30,70" split="vertical">
+	<text size="8" alignmentx="left" alignmenty="top" var="condition" wraparound="1">
+			Condition
 	</text>
+	<div perc="20,40,20,20" split="horizontal">
+		<text size="16" alignmentx="left" alignmenty="top" var="location">
+			Location
+		</text>
+		<text size="24" alignmentx="left" alignmenty="top" var="currenttemp">35°C</text>
+		<text size="8" alignmentx="left" alignmenty="top" var="currenttemp">Partly Cloudy</text>
+		<text size="8" alignmentx="left" alignmenty="top" var="currenttemp">H 35°C  L 22°C</text>
+	</div>
 </div>
