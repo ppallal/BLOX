@@ -2,7 +2,7 @@
 	<text size="8" alignmentx="center" alignmenty="top">
 		Live News Feed !
 	</text>
-	<text size="8" alignmentx="left" var="displayMesssage" alignmenty="center">
+	<text size="8" alignmentx="left" var="displayMesssage" alignmenty="top" wraparound="1">
 		Welcome to NewsFeed App On BLOX	! :)
 	</text>
 </div>

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import sys
 sys.path.append('../..')
 from blox import BLOX
@@ -18,9 +17,6 @@ class weather(BLOX):
 		BLOX.start(self)
 		# Register all the shit like the layouts and the callbacks
 		self.newLayout("Layout","welcome.xml")
-
-		
-		
 		
 		#feed = feedparser.parse('http://www.news.yahoo.com/rss')
 		# r = api.request('statuses/home_timeline')
@@ -30,7 +26,7 @@ class weather(BLOX):
 		# self.tweets = map(lambda x:x['text'],r)
 		# self.tweetnames = map(lambda x:x['user']['name'],r.json())
 		# # Call layouts 
-		# #self.registerCommand("next",self.next,parellel=True)
+		self.registerCommand("in",self.getCurrentTemp,parellel=True)
 		self.renderLayout("Layout")
 		# self.i = 0
 		self.postWeatherFeed()
@@ -54,10 +50,11 @@ class weather(BLOX):
 
 		while(True):
 			currenttemp, condition, today_high, today_low = self.getCurrentTemp()
-			self.changeVariable("currenttemp",str(currenttemp)+"°C","text","Layout")
+			self.changeVariable("currenttemp",str(currenttemp)+chr(176)+"C","text","Layout")
 			self.changeVariable("condition",condition,"text","Layout")
 			self.changeVariable("location",self.location,"text","Layout")
-			self.changeVariable("highlow","H "+str(today_high)+"°C    L "+str(today_low)+"°C","text","Layout")
+			self.changeVariable("highlow","H "+str(today_high)+chr(176)+"C    L "+str(today_low)+chr(176)+"C","text","Layout")
+			self.changeVariable("conditionimg",getConditionImageSrc(condition),"text","Layout")
 			self.refreshScreen()
 			
 			time.sleep(5)
@@ -72,7 +69,33 @@ class weather(BLOX):
 		# self.changeVariable("tweetname",self.tweetnames[self.i%len(self.tweets)][:10],"text","Layout")
 		self.refreshScreen()
 		
-
+	def getConditionImageSrc(self,condition):
+		sunny = ["clear (night)","sunny","fair (night)","fair (day)","hot"]
+		storm = ["tornado","tropical storm","hurricane","severe thunderstorms","thunderstorms","isolated thunderstorms","scattered thunderstorms","scattered thunderstorms","scattered showers","thundershowers","isolated thundershowers"]
+		rain = ["mixed rain and snow","mixed rain and sleet","mixed snow and sleet","freezing rain","showers"]
+		partly_cloudy = ["partly cloudy"]
+		cloudy = ["light snow showers","blowing snow","snow","hail","sleet"]
+		snowy = ["snow flurries","mixed rain and hail","heavy snow","scattered snow showers","heavy snow","snow showers"]
+		super_cloud = ["dust","foggy","haze","smoky","blustery","windy","cold","cloudy","mostly cloudy (night)","mostly cloudy (day)","partly cloudy (night)","partly cloudy (day)"]
+		drizzle = ["freezing drizzle","drizzle"]
+		if condition in sunny:
+			return "sunny.pbm"
+		elif condition in storm:
+			return "storm.pbm"
+		elif condition in rain:
+			return "rain.pbm"
+		elif condition in cloudy:
+			return "cloud.pbm"
+		elif condition in drizzle:
+			return "drizzle.pbm"
+		elif condition in super_cloud:
+			return "super_cloud.pbm"
+		elif condition in snowy:
+			return "snow.pbm"
+		elif condition in storm:
+			return "storm.pbm"
+		else:
+			return "partly_cloudy.pbm"
 
 
 	# a function which cal be called at an interval 

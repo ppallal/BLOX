@@ -1,0 +1,19 @@
+<div perc="31,69" split="vertical">
+	<div perc="20,60,20" split="horizontal">
+		<text size="8" alignmentx="left" alignmenty="top" var="last_trade_time">
+			3:00PM
+		</text>
+		<img src="up_arrow.pbm" alignmentx="left" alignmenty="top" ewidth="40" eheight="40" var="conditionimg"></img>
+		<text size="8" alignmentx="center" alignmenty="top" var="perc">
+			-1.2%
+		</text>
+	</div>
+	<div perc="20,40,20,20" split="horizontal">
+		<text size="16" alignmentx="left" alignmenty="top" var="ticker">
+			MSFT
+		</text>
+		<text size="12" alignmentx="left" alignmenty="top" var="ask_price">$ 47</text>
+		<text size="8" alignmentx="left" alignmenty="top" var="highlow">MON H $48.1 L $46.5</text>
+		<text size="8" alignmentx="left" alignmenty="top" var="yearhighlow">YEAR H $48.1 L $46.5</text>
+	</div>
+</div>
