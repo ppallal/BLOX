@@ -26,7 +26,7 @@ app_fuzzy_command = {}
 def command_router(command):  #if command = app specefic , redirect it
     print command
 
-    if(command.split(' ',1)[0] == "blocks"):
+    if(soundex(command.split(' ',1)[0]) in map(lambda x:soundex(x),["blocks","box","block","blacks","lux","looks"])):
         try:
             command_wo_blocks = command.split(' ',1)[1]
         except:

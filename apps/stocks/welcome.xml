@@ -10,7 +10,7 @@
 	</div>
 	<div perc="20,40,20,20" split="horizontal">
 		<text size="16" alignmentx="left" alignmenty="top" var="ticker">
-			MSFT
+			Pallal
 		</text>
 		<text size="12" alignmentx="left" alignmenty="top" var="ask_price">$ 47</text>
 		<text size="8" alignmentx="left" alignmenty="top" var="highlow">MON H $48.1 L $46.5</text>

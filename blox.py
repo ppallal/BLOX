@@ -81,6 +81,7 @@ class Element:
 	def setValue(self,value):	
 		if(self.type == 'img'): self.src = value
 		elif(self.type == 'text'): self.text = value
+		print "changed Variable to",value
 
 
 class Layout:
@@ -109,6 +110,19 @@ class Layout:
 		for i in nodes:
 			if(i.type == varType):
 				i.setValue(value)
+
+	def printLayout(self):
+		self.printRec(self.rootNode)
+
+	def printRec(self,node,limit = " "):
+
+		if(node.type == 'text'):
+			print limit+node.text
+		elif(node.type == 'img'):
+			print limit+node.src
+		elif(node.type == 'div'):
+			for i in node.children:
+				self.printRec(i,limit+"   ")
 
 	
 

@@ -17,7 +17,8 @@ class weather(BLOX):
 		BLOX.start(self)
 		# Register all the shit like the layouts and the callbacks
 		self.newLayout("Layout","welcome.xml")
-		
+		self.location = "Bangalore"
+		self.delay = 0
 		#feed = feedparser.parse('http://www.news.yahoo.com/rss')
 		# r = api.request('statuses/home_timeline')
 		# #self.titles = map(lambda x:x.title,feed.entries)
@@ -26,14 +27,17 @@ class weather(BLOX):
 		# self.tweets = map(lambda x:x['text'],r)
 		# self.tweetnames = map(lambda x:x['user']['name'],r.json())
 		# # Call layouts 
-		self.registerCommand("in",self.getCurrentTemp,parellel=True)
+		self.registerCommand("in",self.voiceWeather,parellel=True)
 		self.renderLayout("Layout")
 		# self.i = 0
 		self.postWeatherFeed()
 
+	def voiceWeather(self,location):
+		self.delay = 5
+		self.getCurrentTemp(location)
+
 	def getCurrentTemp(self,location = "Bangalore"):
 		self.baseurl = "https://query.yahooapis.com/v1/public/yql?"
-		self.location = location
 		self.yql_query = "select item from weather.forecast where woeid in (select woeid from geo.places where text='"+location+"') and u='c'"
 		self.yql_url = self.baseurl + urllib.urlencode({'q':self.yql_query}) + "&format=json"
 		self.result = urllib2.urlopen(self.yql_url).read()
@@ -43,21 +47,21 @@ class weather(BLOX):
 		self.today_high = self.data['query']['results']['channel']['item']['forecast'][0]['high']
 		self.today_low = self.data['query']['results']['channel']['item']['forecast'][0]['low']
 		print "temp:",self.current_temp," condition: ",self.current_condition," today high: ",self.today_high," today low: ",self.today_low
-		return self.current_temp, self.current_condition, self.today_high, self.today_low
+		self.changeVariable("currenttemp",str(self.current_temp)+chr(176)+"C","text","Layout")
+		self.changeVariable("condition",self.current_condition,"text","Layout")
+		self.changeVariable("location",self.location,"text","Layout")
+		self.changeVariable("highlow","H "+str(self.today_high)+chr(176)+"C L "+str(self.today_low)+chr(176)+"C","text","Layout")
+		self.changeVariable("conditionimg",self.getConditionImageSrc(self.current_condition),"text","Layout")
+		# return self.current_temp, self.current_condition, self.today_high, self.today_low
 
 		# Register intervals
 	def postWeatherFeed(self):
 
 		while(True):
-			currenttemp, condition, today_high, today_low = self.getCurrentTemp()
-			self.changeVariable("currenttemp",str(currenttemp)+chr(176)+"C","text","Layout")
-			self.changeVariable("condition",condition,"text","Layout")
-			self.changeVariable("location",self.location,"text","Layout")
-			self.changeVariable("highlow","H "+str(today_high)+chr(176)+"C    L "+str(today_low)+chr(176)+"C","text","Layout")
-			self.changeVariable("conditionimg",getConditionImageSrc(condition),"text","Layout")
+			self.getCurrentTemp(self.location)
 			self.refreshScreen()
-			
-			time.sleep(5)
+			time.sleep(6+self.delay)
+			self.delay = 0
 
 	def getForLocation(self,location):
 		# print "Inside next command handler"
